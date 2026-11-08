@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Generar cuenta · Ticketera</title>
+  <style>
+    :root { --pine:#143f32; --leaf:#26724d; --paper:#f5f8f5; --ink:#182a22; --muted:#66776e; --line:#dce6df; }
+    * { box-sizing:border-box }
+    body { margin:0; padding:32px 16px; background:var(--paper); color:var(--ink); font-family:"Segoe UI",Arial,sans-serif }
+    main { max-width:640px; margin:0 auto; background:#fff; border:1px solid var(--line); border-radius:8px; padding:26px }
+    h1 { margin:0 0 6px; font-size:22px; color:var(--pine) }
+    p { margin:0 0 18px; color:var(--muted); font-size:14px; line-height:1.5 }
+    label { display:block; margin-bottom:14px; font-size:13px; font-weight:600 }
+    input[type=email], input[type=password] { display:block; width:100%; margin-top:6px; padding:10px; border:1px solid var(--line); border-radius:4px; font:inherit }
+    .roles label { font-weight:400; margin-bottom:8px }
+    button { padding:11px 18px; border:0; border-radius:4px; background:var(--pine); color:#fff; font:inherit; font-weight:700; cursor:pointer }
+    button:disabled { opacity:.6; cursor:progress }
+    textarea { width:100%; min-height:96px; margin-top:16px; padding:10px; border:1px solid var(--line); border-radius:4px; font:12px Consolas,monospace }
+    .note { margin-top:14px; font-size:12px }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Generar una cuenta para la ticketera</h1>
+    <p>Todo se calcula en este navegador: la contraseña no se envía a ningún sitio. Copia la línea resultante
+      dentro de <code>CONFIG.ACCOUNTS</code> en <code>Code.gs</code> y entrégale la contraseña a la persona por un canal seguro.</p>
+    <form id="form">
+      <label>Correo<input type="email" name="email" required autocomplete="off"></label>
+      <label>Contraseña<input type="password" name="password" required minlength="10" autocomplete="new-password"></label>
+      <div class="roles">
+        <label><input type="checkbox" name="internal"> Ve las vistas internas (Responsable y Prioridad alta)</label>
+        <label><input type="checkbox" name="responsible"> Responsable: cambia estados y agrega observaciones</label>
+        <label><input type="checkbox" name="approve"> Aprobador: decide las prioridades altas</label>
+      </div>
+      <button type="submit" id="go">Generar</button>
+    </form>
+    <textarea id="out" readonly placeholder="Aquí aparecerá la línea para CONFIG.ACCOUNTS"></textarea>
+    <p class="note">Para <code>DUMMY_PASSWORD_SALT</code> y <code>DUMMY_PASSWORD_HASH</code>, genera una cuenta con una
+      contraseña cualquiera y usa su <code>salt</code> y su <code>hash</code>.</p>
+  </main>
+  <script>
+    // Debe coincidir con CONFIG.PASSWORD_HASH_ITERATIONS de Code.gs.
+    var ITERATIONS = 60000;
+
+    function toHex(buffer) {
+      return Array.from(new Uint8Array(buffer)).map(function(b) { return b.toString(16).padStart(2, "0"); }).join("");
+    }
+
+    // Mismo cálculo que hace Index.html al iniciar sesión: PBKDF2-SHA256, 256 bits.
+    function deriveVerifier(password, salt) {
+      return crypto.subtle.importKey("raw", new TextEncoder().encode(password), "PBKDF2", false, ["deriveBits"])
+        .then(function(key) {
+          return crypto.subtle.deriveBits({ name: "PBKDF2", salt: salt, iterations: ITERATIONS, hash: "SHA-256" }, key, 256);
+        });
+    }
+
+    document.getElementById("form").addEventListener("submit", function(event) {
+      event.preventDefault();
+      var form = event.currentTarget;
+      var email = form.elements.email.value.trim().toLowerCase();
+      var password = form.elements.password.value;
+      var salt = crypto.getRandomValues(new Uint8Array(16));
+      var button = document.getElementById("go");
+      button.disabled = true;
+      deriveVerifier(password, salt).then(function(verifier) {
+        form.elements.password.value = "";
+        document.getElementById("out").value =
+          '{ email: ' + JSON.stringify(email) +
+          ', salt: "' + toHex(salt) + '", hash: "' + toHex(verifier) + '"' +
+          ', canSeeInternalViews: ' + form.elements.internal.checked +
+          ', canResponsible: ' + form.elements.responsible.checked +
+          ', canApprove: ' + form.elements.approve.checked + ' },';
+      }).finally(function() { button.disabled = false; });
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <base target="_top">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    :root {
+      color-scheme: light;
+      --pine:#143f32; --pine-deep:#0d3026; --leaf:#26724d; --leaf-soft:#e7f2ea;
+      --lime:#b9d95a; --paper:#f5f8f5; --white:#fff; --ink:#182a22; --muted:#66776e;
+      --line:#dce6df; --line-strong:#c7d6cc; --danger:#a63e37; --shadow:0 12px 34px rgba(18,57,42,.08);
+      font-family:"Aptos","Segoe UI",Arial,sans-serif;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;color:var(--ink);background:var(--paper);min-width:320px}
+    button,input,select,textarea{font:inherit}
+    button{cursor:pointer}
+    button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,a:focus-visible{outline:3px solid var(--lime);outline-offset:2px}
+    .app-shell{min-height:100vh;display:grid;grid-template-columns:248px minmax(0,1fr)}
+    .rail{position:sticky;top:0;height:100vh;padding:25px 16px 18px;display:flex;flex-direction:column;color:#eff7f0;background:var(--pine)}
+    .brand{display:flex;align-items:center;gap:12px;padding:1px 7px 28px}
+    .brand-mark{width:42px;height:42px;display:grid;place-items:center;position:relative;color:var(--pine-deep);background:var(--lime);font-size:16px;font-weight:800;letter-spacing:-.06em;border-radius:2px}
+    .brand-mark:after{content:"";position:absolute;width:5px;top:0;bottom:0;right:-5px;background:#f5fff5;opacity:.9}
+    .brand-logo{width:46px;height:46px;object-fit:cover;background:#fff;border-radius:2px}
+    .brand-name{font-size:17px;font-weight:700;line-height:1.1;letter-spacing:-.025em}
+    .brand-subtitle{color:#bdd0c2;font-size:11px;margin-top:5px}
+    .rail-label{padding:0 11px 9px;color:#a8c1af;font-size:11px}
+    .nav-list{display:grid;gap:4px}
+    .nav-button{width:100%;padding:11px 12px;display:flex;align-items:center;gap:12px;border:0;border-radius:3px;text-align:left;color:#d8e6dc;background:transparent;font-size:13px;transition:background-color .15s ease,color .15s ease}
+    .nav-button:hover{color:white;background:rgba(255,255,255,.08)}
+    .nav-button.active{color:white;background:rgba(255,255,255,.13);box-shadow:inset 3px 0 var(--lime)}
+    .nav-icon{width:18px;text-align:center;font-size:15px;opacity:.95}
+    .rail-bottom{margin-top:auto;border-top:1px solid rgba(255,255,255,.16);padding:16px 9px 0}
+    .identity-label{color:#aac0b1;font-size:11px;margin-bottom:4px}
+    .identity-email{overflow-wrap:anywhere;color:#eff7f0;font-size:12px;line-height:1.45}
+    .role-tag{display:inline-flex;align-items:center;gap:6px;margin-top:9px;color:#d8ebad;font-size:11px}
+    .role-dot{width:7px;height:7px;border-radius:50%;background:var(--lime)}
+    .logout-button{display:block;margin-top:13px;padding:7px 10px;border:1px solid rgba(220,238,225,.35);border-radius:2px;color:#eff7f0;background:transparent;text-align:left;font-size:11px}
+    .logout-button:hover{border-color:var(--lime);background:rgba(255,255,255,.08)}
+    .main{min-width:0}
+    .topbar{height:65px;padding:0 35px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line);background:rgba(255,255,255,.94)}
+    .crumb{color:var(--muted);font-size:13px}.topbar-note{color:var(--muted);font-size:12px}
+    .content-wrap{max-width:1440px;margin:0 auto;padding:33px 35px 52px}
+    .page-heading{max-width:780px;margin:0 0 25px}
+    .page-heading h1{margin:0;color:var(--pine-deep);font-size:clamp(26px,3vw,35px);line-height:1.12;letter-spacing:-.045em;font-weight:700}
+    .page-heading p{max-width:690px;color:var(--muted);font-size:14px;line-height:1.55;margin:11px 0 0}
+    .heading-rule{width:54px;height:4px;margin-top:18px;background:var(--leaf)}
+    .notice{display:none;margin:0 35px;padding:12px 15px;border-left:4px solid var(--leaf);background:#eaf4ed;color:var(--pine);font-size:13px;line-height:1.5}
+    .notice.visible{display:block}.notice.error{border-left-color:var(--danger);background:#fbefed;color:#782d29}.notice.warning{border-left-color:#d99b35;background:#fff6e5;color:#714b12}
+    .form-panel{max-width:970px;background:white;border:1px solid var(--line);box-shadow:var(--shadow)}
+    .panel-topline{height:5px;background:var(--leaf)}.form-body{padding:25px 29px 27px}
+    .section-caption{display:flex;justify-content:space-between;align-items:baseline;gap:15px;padding-bottom:14px;border-bottom:1px solid var(--line);margin-bottom:20px}
+    .section-caption h2{margin:0;color:var(--pine);font-size:16px;letter-spacing:-.015em}.required-note{color:var(--muted);font-size:11px}
+    .form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:17px 20px}
+    .field{display:grid;gap:7px;min-width:0}.field.wide{grid-column:1/-1}
+    .field-label{color:#34483d;font-size:12px;font-weight:650}.field-label .required{color:var(--leaf)}
+    .control{width:100%;min-height:43px;padding:10px 12px;border:1px solid var(--line-strong);border-radius:2px;color:var(--ink);background:white;font-size:13px}
+    .control::placeholder{color:#92a097}textarea.control{min-height:136px;resize:vertical;line-height:1.5}
+    .field-help{color:var(--muted);font-size:11px;line-height:1.45}.priority-help{display:none;padding:10px 12px;color:#6b4b10;background:#fff6e5;border-left:3px solid #d99b35;font-size:12px;line-height:1.45}.priority-help.visible{display:block}
+    .file-control{padding:12px;border:1px dashed #aac3b2;background:#f8fbf8}.file-list{color:var(--muted);font-size:11px;line-height:1.5}
+    .form-footer{display:flex;justify-content:space-between;align-items:center;gap:20px;margin-top:24px;padding-top:18px;border-top:1px solid var(--line)}
+    .form-footer-note{max-width:430px;color:var(--muted);font-size:11px;line-height:1.5}
+    .button{min-height:42px;display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:0 18px;border:1px solid var(--pine);border-radius:2px;color:white;background:var(--pine);font-size:12px;font-weight:650;transition:background .15s ease,border-color .15s ease}
+    .button:hover{border-color:var(--leaf);background:var(--leaf)}.button:disabled{cursor:wait;opacity:.65}
+    .button.secondary{border-color:var(--line-strong);color:var(--pine);background:white}.button.secondary:hover{border-color:var(--leaf);background:var(--leaf-soft)}
+    .button.danger{border-color:#a63e37;background:#a63e37}.button.danger:hover{background:#842f2b}.button.small{min-height:32px;padding:0 11px;font-size:11px}
+    .success-panel{max-width:970px;padding:30px;border:1px solid #c9ddce;background:#fff}
+    .success-mark{width:35px;height:35px;display:grid;place-items:center;margin-bottom:18px;border-radius:50%;color:white;background:var(--leaf);font-size:18px}
+    .success-panel h2{color:var(--pine);margin:0;font-size:22px}.success-panel p{color:var(--muted);line-height:1.55;font-size:13px}
+    .ticket-code{display:inline-block;padding:8px 11px;border:1px solid var(--line);color:var(--pine);background:var(--paper);font-size:14px;font-weight:700;letter-spacing:.04em}
+    .login-panel{max-width:550px;padding:28px 30px;border:1px solid var(--line);border-top:5px solid var(--leaf);background:white;box-shadow:var(--shadow)}
+    .login-panel h1{margin:0;color:var(--pine-deep);font-size:27px;letter-spacing:-.04em}.login-panel p{color:var(--muted);font-size:13px;line-height:1.55}
+    .login-form{display:grid;gap:14px;margin-top:22px}.login-form .button{width:100%;margin-top:4px}.login-meta{color:var(--muted);font-size:11px;line-height:1.5}
+    .list-toolbar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin:0 0 14px}
+    .list-count{color:var(--muted);font-size:12px}.search-control{width:min(100%,330px);min-height:38px;padding:8px 11px;border:1px solid var(--line-strong);border-radius:2px;background:white;font-size:12px}
+    .table-shell{overflow:auto;border:1px solid var(--line);background:white}table{width:100%;border-collapse:collapse}.data-table{min-width:1160px}
+    th{position:sticky;top:0;z-index:1;padding:11px 12px;color:#466052;background:#edf4ee;border-bottom:1px solid var(--line-strong);text-align:left;font-size:11px;font-weight:700;white-space:nowrap}
+    td{max-width:310px;padding:12px;border-bottom:1px solid #e8eee9;color:#31443a;text-align:left;vertical-align:top;font-size:12px;line-height:1.45;overflow-wrap:anywhere}
+    tbody tr:hover{background:#fbfdfb}tbody tr:last-child td{border-bottom:0}
+    .cell-id{color:var(--pine);font-weight:700;white-space:nowrap}.cell-client{min-width:140px;font-weight:650;color:var(--ink)}
+    .cell-details{min-width:230px;white-space:pre-wrap}.cell-comments{min-width:200px;white-space:pre-wrap;color:var(--muted)}.cell-files{min-width:145px}
+    .file-link{display:block;color:var(--leaf);margin:0 0 5px;padding:0;border:0;background:transparent;text-align:left;font-size:12px;text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:2px;cursor:pointer}.file-link:last-child{margin-bottom:0}
+    .pill{display:inline-flex;align-items:center;min-height:23px;padding:3px 8px;border-radius:12px;color:#365445;background:#edf2ee;font-size:10px;white-space:nowrap}
+    .pill.high{color:#8b342e;background:#fbeae8}.pill.medium{color:#795416;background:#fff4dd}.pill.low{color:#365445;background:#e7f2ea}
+    .status-badge{display:inline-flex;min-height:23px;align-items:center;padding:3px 8px;border-left:3px solid var(--leaf);color:#335242;background:#f0f5f0;font-size:10px;white-space:nowrap}.status-badge.rejected{border-left-color:var(--danger);color:#782d29;background:#fbefed}
+    .dashboard-stats{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));max-width:1100px;margin:0 0 23px;border-top:1px solid var(--line-strong);border-bottom:1px solid var(--line-strong);background:white}
+    .dashboard-stat{display:grid;gap:5px;padding:17px 20px;border-right:1px solid var(--line)}.dashboard-stat:last-child{border-right:0}
+    .dashboard-stat strong{color:var(--pine);font-size:28px;line-height:1;letter-spacing:-.04em}.dashboard-stat span{color:var(--muted);font-size:11px}
+    .chart-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;max-width:1100px}
+    .chart-panel{min-width:0;padding:18px 20px 17px;border:1px solid var(--line);background:white}
+    .chart-panel h2{margin:0 0 17px;color:var(--pine);font-size:14px;font-weight:700}
+    .chart-bars{display:grid;gap:11px}.chart-row{display:grid;grid-template-columns:minmax(110px,1.2fr) minmax(60px,2fr) 28px;align-items:center;gap:10px}
+    .chart-label{color:#52645a;font-size:11px;line-height:1.3}.bar-track{height:8px;background:#edf2ee;overflow:hidden}.bar-fill{height:100%;min-width:0;transition:width .25s ease}.chart-value{color:var(--pine);font-size:11px;text-align:right;font-weight:650}
+    .empty-state{max-width:700px;padding:26px 25px;border-left:4px solid var(--lime);background:white;color:var(--muted);font-size:13px;line-height:1.55}
+    .empty-state strong{display:block;margin-bottom:5px;color:var(--pine);font-size:15px}
+    .manager-table{min-width:2040px}.manager-table td{max-width:250px}.manager-table .status-cell{min-width:210px}
+    .status-select{min-width:188px;min-height:34px;padding:6px 8px;border:1px solid var(--line-strong);border-radius:2px;color:var(--pine);background:white;font-size:11px}
+    .status-next{color:var(--muted);font-size:10px;display:block;margin-top:5px}
+    .comment-editor{min-width:190px;display:grid;gap:6px;margin-top:8px}.comment-editor textarea{width:100%;min-height:55px;resize:vertical;padding:7px;border:1px solid var(--line-strong);border-radius:2px;font-size:11px}
+    .manager-toolbar-note{color:var(--muted);font-size:11px;line-height:1.5;margin:0 0 13px}
+    .approval-table{min-width:1260px}.approval-table .approve-actions{min-width:195px;white-space:nowrap}.approval-actions{display:flex;gap:7px}
+    .approval-row.target td{background:#f6fae9}.loading{color:var(--muted);font-size:13px;padding:22px 0}
+    .spinner{width:14px;height:14px;display:inline-block;border:2px solid rgba(255,255,255,.45);border-top-color:white;border-radius:50%;animation:spin .75s linear infinite}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    @media(max-width:900px){.app-shell{grid-template-columns:205px minmax(0,1fr)}.topbar{padding:0 22px}.content-wrap{padding:27px 22px 42px}.notice{margin:0 22px}}
+    @media(max-width:650px){
+      .app-shell{display:block}.rail{position:relative;width:100%;height:auto;padding:13px 14px 10px}.brand{padding:0 3px 12px}.brand-mark{width:36px;height:36px}
+      .rail-label{display:none}.rail-bottom{display:flex;justify-content:flex-end;margin-top:0;padding:5px 3px 0;border-top:0}.identity-label,.identity-email,.role-tag{display:none}.logout-button{margin-top:2px}.nav-list{display:flex;overflow-x:auto;gap:5px;padding-bottom:2px}
+      .nav-button{width:auto;flex:0 0 auto;padding:9px 11px;font-size:11px}.nav-button.active{box-shadow:inset 0 -3px var(--lime)}.nav-icon{display:none}
+      .topbar{height:48px;padding:0 17px}.topbar-note{display:none}.content-wrap{padding:24px 16px 36px}.notice{margin:0 16px}
+      .page-heading{margin-bottom:20px}.form-body{padding:20px 17px}.form-grid{grid-template-columns:1fr;gap:15px}.field.wide{grid-column:auto}
+      .form-footer{align-items:stretch;flex-direction:column}.form-footer .button{width:100%}.section-caption{align-items:flex-start;flex-direction:column;gap:6px}.search-control{width:100%}
+      .dashboard-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.dashboard-stat:nth-child(2n){border-right:0}.dashboard-stat:nth-child(-n+4){border-bottom:1px solid var(--line)}.dashboard-stat:nth-child(5){border-right:0}
+      .chart-grid{grid-template-columns:1fr}.chart-panel{padding:15px 13px}.chart-row{grid-template-columns:minmax(100px,1fr) minmax(40px,2fr) 22px;gap:7px}
+    }
+    @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+    /* Design refinements: confident green, quiet surfaces, clear data hierarchy. */
+    :root{--pine:#173f34;--pine-deep:#102f28;--leaf:#287452;--leaf-soft:#eaf3ed;--paper:#f3f6f4;--line:#dfe7e1;--line-strong:#cbd8cf;--shadow:0 1px 2px rgba(16,47,40,.04)}
+    body{-webkit-font-smoothing:antialiased;font-feature-settings:"kern" 1,"liga" 1;text-rendering:optimizeLegibility}
+    .rail{box-shadow:inset -1px 0 rgba(255,255,255,.07)}
+    .brand-logo{outline:1px solid rgba(0,0,0,.1);outline-offset:-1px}
+    .content-wrap{padding-top:37px}
+    .page-heading h1,.login-panel h1{text-wrap:balance}
+    .page-heading p,.field-help,.form-footer-note,.manager-toolbar-note{text-wrap:pretty}
+    .form-panel,.login-panel,.success-panel,.chart-panel,.empty-state{border-radius:6px;box-shadow:var(--shadow)}
+    .form-panel{overflow:hidden}
+    .control,.search-control,.status-select,.comment-editor textarea{border-radius:4px;background:#fbfcfb}
+    .control:focus-visible,.search-control:focus-visible,.status-select:focus-visible,.comment-editor textarea:focus-visible{background:#fff;border-color:var(--leaf)}
+    .button,.logout-button{border-radius:4px;min-height:44px}
+    .button.small{min-height:38px}
+    .data-table{min-width:1280px;font-variant-numeric:tabular-nums lining-nums}
+    .dashboard-stat strong,.chart-value{font-variant-numeric:tabular-nums lining-nums}
+    .dashboard-stats{border-radius:6px;overflow:hidden;box-shadow:var(--shadow)}
+    .chart-grid{align-items:stretch;gap:16px;max-width:1180px}
+    .chart-panel{padding:20px 21px;border-radius:6px;box-shadow:var(--shadow)}
+    .chart-panel h2{margin-bottom:14px;font-size:14px}
+    .chart-panel-subtitle{margin:-8px 0 16px;color:var(--muted);font-size:11px;line-height:1.45}
+    .chart-donut-layout{display:grid;grid-template-columns:minmax(125px, .9fr) minmax(130px,1.1fr);align-items:center;gap:17px;min-height:155px}
+    .chart-donut{width:min(100%,166px);aspect-ratio:1;border-radius:50%;position:relative;display:grid;place-items:center;margin:auto}
+    .chart-donut:after{content:"";position:absolute;inset:22%;border-radius:50%;background:#fff}
+    .chart-donut-center{position:relative;z-index:1;text-align:center;color:var(--muted);font-size:10px;line-height:1.35}
+    .chart-donut-center strong{display:block;color:var(--pine);font-size:23px;line-height:1.1;font-variant-numeric:tabular-nums}
+    .chart-legend{display:grid;gap:9px}.chart-legend-item{display:grid;grid-template-columns:9px minmax(0,1fr) auto;align-items:center;gap:8px;color:#52645a;font-size:11px;line-height:1.35}
+    .chart-legend-dot{width:8px;height:8px;border-radius:50%}.chart-legend-value{color:var(--pine);font-weight:700;font-variant-numeric:tabular-nums}
+    .chart-trend{width:100%;height:auto;overflow:visible}.chart-trend text{fill:#66776e;font:11px "Segoe UI",Arial,sans-serif}.chart-trend .grid{stroke:#e7eee9;stroke-width:1}.chart-trend .trend-line{fill:none;stroke:#26724d;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}.chart-trend .trend-area{fill:rgba(38,114,77,.09)}.chart-trend .trend-dot{fill:#fff;stroke:#26724d;stroke-width:2.5}
+    .public-delay-note{max-width:1100px;margin:0 0 16px;padding:12px 15px;border:1px solid #d8e6db;border-left:4px solid var(--leaf);border-radius:4px;background:#f6faf7;color:#43584b;font-size:12px;line-height:1.5}
+    .public-delay-note strong{color:var(--pine)}
+    @media(max-width:650px){.chart-donut-layout{grid-template-columns:120px minmax(0,1fr);gap:12px}.chart-donut{width:116px}.chart-legend{gap:7px}.content-wrap{padding-top:24px}}
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="rail">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">TK</div>
+        <div><div class="brand-name">Ticketera</div><div class="brand-subtitle">Gestión de solicitudes</div></div>
+      </div>
+      <div class="rail-label">Espacio de trabajo</div>
+      <nav class="nav-list" id="navigation" aria-label="Secciones"></nav>
+      <div class="rail-bottom">
+        <div class="identity-label">Sesión</div>
+        <div class="identity-email" id="identity">Verificando cuenta…</div>
+        <div class="role-tag" id="roleTag" hidden><span class="role-dot"></span><span id="roleLabel"></span></div>
+        <button class="logout-button" id="logoutButton" type="button" hidden>Cerrar sesión</button>
+      </div>
+    </aside>
+    <main class="main">
+      <header class="topbar"><div class="crumb" id="sectionName">Conectando con la ticketera</div><div class="topbar-note">Equipo de Data</div></header>
+      <div class="notice" id="notice" role="status" aria-live="polite"></div>
+      <div class="content-wrap" id="content"><div class="loading">Cargando solicitudes…</div></div>
+    </main>
+  </div>
+  <script>
+    var appData = null;
+    var currentView = "new";
+    var approvalTokenFromUrl = new URLSearchParams(window.location.search).get("token") || "";
+    var approvalDecisionFromUrl = new URLSearchParams(window.location.search).get("decision") || "";
+    var authToken = localStorage.getItem("ticketeraAuth") || "";
+
+    function startApp() {
+      if (typeof google === "undefined" || !google.script || !google.script.run) {
+        showFatal("Abre esta página desde el enlace publicado de Apps Script.");
+        return;
+      }
+      if (!authToken) { renderLogin(); return; }
+      loadAppData();
+    }
+    function loadAppData() {
+      google.script.run.withSuccessHandler(onAppData)
+        .withFailureHandler(function(error) {
+          if (!handleSessionExpired(error)) showFatal(errorMessage(error));
+        }).getAppData(authToken);
+    }
+    function renderLogin(error) {
+      document.getElementById("sectionName").textContent = "Acceso";
+      document.getElementById("identity").textContent = "Sin iniciar sesión";
+      document.getElementById("roleTag").hidden = true;
+      document.getElementById("logoutButton").hidden = true;
+      document.getElementById("navigation").textContent = "";
+      setContent('<section class="login-panel"><h1>Ingresar</h1><p>Usa el correo y la contraseña que te asignaron para la ticketera.</p><form class="login-form" id="loginForm"><label class="field"><span class="field-label">Correo electrónico</span><input class="control" name="email" type="email" maxlength="254" autocomplete="username" placeholder="nombre@empresa.com" required></label><label class="field"><span class="field-label">Contraseña</span><input class="control" name="password" type="password" maxlength="256" autocomplete="current-password" required></label><button class="button" type="submit" id="loginButton">Entrar</button><div class="login-meta">El acceso está limitado a las cuentas autorizadas. La sesión dura 12 horas.</div></form></section>');
+      if (error) showNotice(error, "error"); else clearNotice();
+      document.getElementById("loginForm").addEventListener("submit", submitLogin);
+    }
+    function submitLogin(event) {
+      event.preventDefault();
+      var form = event.currentTarget;
+      if (!form.reportValidity()) return;
+      if (!window.crypto || !window.crypto.subtle || typeof TextEncoder === "undefined") {
+        showNotice("Este navegador no permite el inicio seguro. Abre la ticketera en un navegador actualizado.", "error");
+        return;
+      }
+      var email = form.elements.email.value.trim();
+      var password = form.elements.password.value;
+      var button = document.getElementById("loginButton");
+      button.disabled = true;
+      button.innerHTML = '<span class="spinner" aria-hidden="true"></span> Preparando acceso…';
+      clearNotice();
+      google.script.run.withSuccessHandler(function(challenge) {
+        derivePasswordProof(password, challenge).then(function(proof) {
+          form.elements.password.value = "";
+          button.innerHTML = '<span class="spinner" aria-hidden="true"></span> Verificando…';
+          google.script.run.withSuccessHandler(function(result) {
+            authToken = result.authToken;
+            localStorage.setItem("ticketeraAuth", authToken);
+            loadAppData();
+          }).withFailureHandler(function(error) {
+            restoreLoginButton(button);
+            showNotice(errorMessage(error), "error");
+          }).loginWithChallenge(email, challenge.challengeId, proof);
+        }).catch(function(error) {
+          form.elements.password.value = "";
+          restoreLoginButton(button);
+          showNotice(error.message || "No se pudo preparar el acceso seguro.", "error");
+        });
+      }).withFailureHandler(function(error) {
+        form.elements.password.value = "";
+        restoreLoginButton(button);
+        showNotice(errorMessage(error), "error");
+      }).getLoginChallenge(email);
+    }
+    function derivePasswordProof(password, challenge) {
+      var encoder = new TextEncoder();
+      var passwordBytes = encoder.encode(password);
+      var saltHex = String(challenge.salt || "");
+      if (!/^(?:[0-9a-f]{2})+$/i.test(saltHex)) return Promise.reject(new Error("No se pudo preparar el acceso seguro."));
+      var salt = new Uint8Array(saltHex.match(/.{2}/g).map(function(byte) { return parseInt(byte, 16); }));
+      return window.crypto.subtle.importKey("raw", passwordBytes, "PBKDF2", false, ["deriveBits"])
+        .then(function(key) {
+          return window.crypto.subtle.deriveBits({
+            name: "PBKDF2", salt: salt, iterations: Number(challenge.iterations), hash: "SHA-256"
+          }, key, 256);
+        })
+        .then(function(verifier) {
+          return window.crypto.subtle.importKey("raw", verifier, {name:"HMAC", hash:"SHA-256"}, false, ["sign"]);
+        })
+        .then(function(key) {
+          return window.crypto.subtle.sign("HMAC", key, encoder.encode(challenge.challengeId));
+        })
+        .then(function(signature) {
+          return Array.from(new Uint8Array(signature)).map(function(byte) {
+            return byte.toString(16).padStart(2, "0");
+          }).join("");
+        });
+    }
+    function restoreLoginButton(button) {
+      button.disabled = false;
+      button.textContent = "Entrar";
+    }
+    function onAppData(data) {
+      appData = data;
+      document.getElementById("identity").textContent = data.userEmail;
+      document.getElementById("logoutButton").hidden = false;
+      var roleLabels = [];
+      if (data.canResponsible) roleLabels.push("Responsable");
+      if (data.canApprove) roleLabels.push("Aprobación de prioridad alta");
+      document.getElementById("roleTag").hidden = roleLabels.length === 0;
+      document.getElementById("roleLabel").textContent = roleLabels.join(" · ");
+      buildNavigation();
+      navigate(data.canSeeInternalViews && approvalTokenFromUrl ? "approval" : "new");
+    }
+    function buildNavigation() {
+      var nav = document.getElementById("navigation");
+      nav.textContent = "";
+      addNavButton(nav, "new", "Crear ticket", "＋");
+      addNavButton(nav, "overview", "Vista General", "▤");
+      addNavButton(nav, "dashboard", "Gráficos", "▥");
+      if (appData.canSeeInternalViews) {
+        addNavButton(nav, "responsible", "Vista Responsable", "◉");
+        addNavButton(nav, "approval", "Prioridad alta", "✓");
+      }
+    }
+    function addNavButton(nav, view, label, icon) {
+      var button = document.createElement("button");
+      button.type = "button";
+      button.className = "nav-button";
+      button.dataset.view = view;
+      button.innerHTML = '<span class="nav-icon" aria-hidden="true"></span><span></span>';
+      button.querySelector(".nav-icon").textContent = icon;
+      button.querySelector("span:last-child").textContent = label;
+      button.addEventListener("click", function() { navigate(view); });
+      nav.appendChild(button);
+    }
+    function navigate(view) {
+      if ((view === "responsible" || view === "approval") && !appData.canSeeInternalViews) {
+        showNotice("No tienes acceso a esta sección.", "error"); return;
+      }
+      currentView = view;
+      document.querySelectorAll(".nav-button").forEach(function(button) {
+        button.classList.toggle("active", button.dataset.view === view);
+      });
+      clearNotice();
+      if (view === "new") renderNewTicket();
+      if (view === "overview") renderOverview();
+      if (view === "dashboard") renderDashboard();
+      if (view === "responsible") renderResponsible();
+      if (view === "approval") renderApprovals();
+    }
+    function renderNewTicket() {
+      setHeading("Ticketera", "Cuéntanos qué necesita el equipo", "Registra el pedido con el contexto necesario para que el equipo pueda atenderlo.");
+      var html = ''
+        + '<section class="form-panel"><div class="panel-topline"></div><form id="ticketForm" class="form-body">'
+        + '<div class="section-caption"><h2>Datos de la solicitud</h2><span class="required-note">Los campos con * son obligatorios</span></div>'
+        + '<div class="form-grid">'
+        + '<label class="field"><span class="field-label">Cliente <span class="required">*</span></span><input class="control" name="client" maxlength="120" autocomplete="organization" placeholder="Nombre del cliente" required></label>'
+        + '<label class="field"><span class="field-label">País <span class="required">*</span></span><select class="control" name="country" required>' + optionList(appData.countries, "Selecciona un país") + '</select></label>'
+        + '<label class="field"><span class="field-label">Tipo de solicitud <span class="required">*</span></span><select class="control" name="requestType" required>' + optionList(appData.requestTypes, "Selecciona una solicitud") + '</select></label>'
+        + '<label class="field"><span class="field-label">Prioridad <span class="required">*</span></span><select class="control" name="priority" id="prioritySelect" required>' + optionList(appData.priorities, "Selecciona una prioridad") + '</select></label>'
+        + '<div class="field wide"><div class="priority-help" id="priorityHelp">La prioridad alta necesita el visto bueno de una persona aprobadora. El ticket quedará en espera hasta que se revise.</div></div>'
+        + '<label class="field wide"><span class="field-label">Detalles <span class="required">*</span></span><textarea class="control" name="details" maxlength="5000" placeholder="Explica qué se debe cambiar, dónde aparece y cuál es el resultado esperado." required></textarea><span class="field-help">Incluye referencias, medidas, fechas o enlaces que ayuden a completar el pedido.</span></label>'
+        + '<label class="field wide"><span class="field-label">Solicitante <span class="required">*</span></span><select class="control" name="applicant" required>' + optionList(appData.applicants, "Selecciona tu nombre") + '</select><span class="field-help">El equipo se asigna automáticamente según el solicitante.</span></label>'
+        + '<label class="field wide"><span class="field-label">Archivos adjuntos</span><input class="control file-control" type="file" name="attachments" id="attachments" multiple><span class="field-help">Hasta 3 archivos, máximo 5 MB cada uno y 12 MB en total.</span><span class="file-list" id="fileList">No hay archivos seleccionados.</span></label>'
+        + '</div><div class="form-footer"><div class="form-footer-note">La fecha, el ID del ticket y el equipo se registran automáticamente.</div><button class="button" type="submit" id="submitButton">Crear ticket</button></div>'
+        + '</form></section>';
+      setViewBody(html);
+      document.getElementById("prioritySelect").addEventListener("change", function(event) {
+        document.getElementById("priorityHelp").classList.toggle("visible", event.target.value === "Alta");
+      });
+      document.getElementById("attachments").addEventListener("change", updateFileList);
+      document.getElementById("ticketForm").addEventListener("submit", submitTicket);
+    }
+    function submitTicket(event) {
+      event.preventDefault(); clearNotice();
+      var form = event.currentTarget;
+      if (!form.reportValidity()) return;
+      var selected = Array.prototype.slice.call(document.getElementById("attachments").files || []);
+      if (selected.length > 3) { showNotice("Puedes adjuntar hasta 3 archivos.", "error"); return; }
+      var total = selected.reduce(function(sum, file) { return sum + file.size; }, 0);
+      if (selected.some(function(file) { return file.size > 5 * 1024 * 1024; })) { showNotice("Cada archivo debe pesar 5 MB o menos.", "error"); return; }
+      if (total > 12 * 1024 * 1024) { showNotice("El tamaño combinado de los adjuntos debe ser de 12 MB o menos.", "error"); return; }
+      var button = document.getElementById("submitButton");
+      button.disabled = true; button.innerHTML = '<span class="spinner" aria-hidden="true"></span> Guardando…';
+      Promise.all(selected.map(readFileAsBase64)).then(function(files) {
+        var payload = {
+          client:form.elements.client.value,country:form.elements.country.value,requestType:form.elements.requestType.value,
+          details:form.elements.details.value,applicant:form.elements.applicant.value,priority:form.elements.priority.value,attachments:files
+        };
+        google.script.run.withSuccessHandler(function(result) {
+          renderTicketSuccess(result);
+          if (result.message) showNotice(result.message, result.message.indexOf("no se pudo") >= 0 ? "warning" : "success");
+        }).withFailureHandler(function(error) {
+          if (handleSessionExpired(error)) return;
+          button.disabled = false; button.textContent = "Crear ticket"; showNotice(errorMessage(error), "error");
+        }).createTicket(payload, authToken);
+      }).catch(function(error) {
+        button.disabled = false; button.textContent = "Crear ticket"; showNotice(error.message || "No se pudieron leer los archivos.", "error");
+      });
+    }
+    function readFileAsBase64(file) {
+      return new Promise(function(resolve, reject) {
+        var reader = new FileReader();
+        reader.onload = function() {
+          var result = String(reader.result || "");
+          resolve({name:file.name,mimeType:file.type || "application/octet-stream",data:result.split(",")[1] || ""});
+        };
+        reader.onerror = function() { reject(new Error("No se pudo leer " + file.name + ".")); };
+        reader.readAsDataURL(file);
+      });
+    }
+    function updateFileList(event) {
+      var files = Array.prototype.slice.call(event.target.files || []);
+      document.getElementById("fileList").textContent = files.length
+        ? files.map(function(file) { return file.name + " · " + formatBytes(file.size); }).join("  |  ")
+        : "No hay archivos seleccionados.";
+    }
+    function renderTicketSuccess(result) {
+      var panel = document.createElement("section"); panel.className = "success-panel";
+      var mark = document.createElement("div"); mark.className = "success-mark"; mark.textContent = "✓";
+      var title = document.createElement("h2"); title.textContent = "Solicitud registrada";
+      var code = document.createElement("div"); code.className = "ticket-code"; code.textContent = result.ticketId;
+      var message = document.createElement("p");
+      message.textContent = result.status === "Esperando Aprobación"
+        ? "El ticket quedó esperando la aprobación de prioridad alta."
+        : "El ticket quedó pendiente para que el equipo lo atienda.";
+      var button = document.createElement("button"); button.type = "button"; button.className = "button secondary";
+      button.textContent = "Crear otro ticket"; button.addEventListener("click", renderNewTicket);
+      panel.appendChild(mark); panel.appendChild(title); panel.appendChild(code); panel.appendChild(message); panel.appendChild(button);
+      var root = document.getElementById("content"); root.textContent = ""; root.appendChild(panel);
+    }
+    function renderOverview() {
+      setHeading("Vista General", "Solicitudes registradas", "Consulta el estado, los datos compartidos y los archivos adjuntos de cada ticket.");
+      if (!appData.publicTickets.length) { setViewBody(emptyMarkup("Todavía no hay solicitudes", "Cuando alguien registre un ticket, aparecerá aquí.")); return; }
+      setViewBody('<div class="public-delay-note"><strong>Actualización del enlace público:</strong> al pasar a “Esperando Validación” se registra la hora de término. El cambio puede tardar hasta 30 minutos en reflejarse en el enlace web público.</div><div class="list-toolbar"><div class="list-count" id="listCount"></div><input class="search-control" id="tableSearch" type="search" placeholder="Buscar por cliente, ticket o solicitante" aria-label="Buscar solicitudes"></div><div class="table-shell" id="tableShell"></div>');
+      document.getElementById("tableSearch").addEventListener("input", drawOverviewTable); drawOverviewTable();
+    }
+    function drawOverviewTable() {
+      var search = (document.getElementById("tableSearch").value || "").toLowerCase().trim();
+      var records = appData.publicTickets.filter(function(ticket) {
+        return !search || [ticket.id,ticket.requestedAt,ticket.client,ticket.country,ticket.requestType,ticket.details,ticket.applicant,ticket.team,ticket.priority,ticket.status,ticket.finishedAt,ticket.comments].join(" ").toLowerCase().indexOf(search) >= 0;
+      });
+      document.getElementById("listCount").textContent = records.length + (records.length === 1 ? " solicitud" : " solicitudes");
+      var table = document.createElement("table"); table.className = "data-table";
+      appendTableHeader(table, ["Ticket","Fecha de solicitud","Cliente","País","Solicitud","Detalles","Solicitante","Equipo/Área","Prioridad","Estado","Terminado","Comentarios","Archivos"]);
+      var body = document.createElement("tbody");
+      records.forEach(function(ticket) {
+        var row = document.createElement("tr");
+        addTextCell(row,ticket.id,"cell-id"); addTextCell(row,ticket.requestedAt); addTextCell(row,ticket.client,"cell-client");
+        addTextCell(row,ticket.country); addTextCell(row,ticket.requestType); addTextCell(row,ticket.details,"cell-details");
+        addTextCell(row,ticket.applicant); addTextCell(row,ticket.team); addPriorityCell(row,ticket.priority);
+        addStatusBadgeCell(row,ticket.status); addTextCell(row,ticket.finishedAt); addTextCell(row,ticket.comments,"cell-comments"); addAttachmentCell(row,ticket.attachments); body.appendChild(row);
+      });
+      table.appendChild(body); var shell = document.getElementById("tableShell"); shell.textContent = ""; shell.appendChild(table);
+    }
+    function renderDashboard() {
+      setHeading("Gráficos", "Pulso de solicitudes", "Una vista rápida de cargas, prioridades y avance de los tickets.");
+      var tickets = appData.publicTickets;
+      var waiting = tickets.filter(function(ticket) { return ticket.status === "Esperando Aprobación" || ticket.status === "Pendiente"; }).length;
+      var active = tickets.filter(function(ticket) { return ticket.status === "En Proceso" || ticket.status === "Esperando Validación"; }).length;
+      var complete = tickets.filter(function(ticket) { return ticket.status === "Completado"; }).length;
+      var rejected = tickets.filter(function(ticket) { return ticket.status === "Rechazado"; }).length;
+      setViewBody('<div class="dashboard-stats" id="dashboardStats"></div><div class="chart-grid" id="dashboardCharts"></div>');
+      var stats = document.getElementById("dashboardStats");
+      appendDashboardStat(stats, "Solicitudes", tickets.length);
+      appendDashboardStat(stats, "Por iniciar", waiting);
+      appendDashboardStat(stats, "En atención", active);
+      appendDashboardStat(stats, "Completadas", complete);
+      appendDashboardStat(stats, "Rechazadas", rejected);
+
+      var statusLabels = ["Esperando Aprobación","Pendiente","En Proceso","Esperando Validación","Completado","Rechazado"];
+      var priorityLabels = ["Baja","Media","Alta"];
+      var countryLabels = appData.countries;
+      appendDonutChart("Distribución por estado", countValues(tickets, "status", statusLabels), ["#c68c2d","#71867b","#26724d","#7293a3","#8bae43","#aa5047"]);
+      appendTrendChart("Solicitudes en el tiempo", monthlyTicketCounts(tickets));
+      appendDonutChart("Distribución por prioridad", countValues(tickets, "priority", priorityLabels), ["#287452","#c68c2d","#aa5047"]);
+      appendBarChart("Solicitudes por tipo", countValues(tickets, "requestType", appData.requestTypes), ["#287452"]);
+      appendBarChart("Solicitudes por país", countValues(tickets, "country", countryLabels), ["#26724d","#85a849"]);
+    }
+    function appendDashboardStat(root, label, value) {
+      var item = document.createElement("div"); item.className = "dashboard-stat";
+      var number = document.createElement("strong"); number.textContent = String(value);
+      var caption = document.createElement("span"); caption.textContent = label;
+      item.appendChild(number); item.appendChild(caption); root.appendChild(item);
+    }
+    function countValues(tickets, property, labels) {
+      return labels.map(function(label) {
+        return { label:label, count:tickets.filter(function(ticket) { return ticket[property] === label; }).length };
+      });
+    }
+    function appendBarChart(title, entries, colors) {
+      var panel = document.createElement("section"); panel.className = "chart-panel";
+      var heading = document.createElement("h2"); heading.textContent = title; panel.appendChild(heading);
+      var bars = document.createElement("div"); bars.className = "chart-bars";
+      var max = entries.reduce(function(value, entry) { return Math.max(value, entry.count); }, 0);
+      entries.forEach(function(entry, index) {
+        var row = document.createElement("div"); row.className = "chart-row";
+        var label = document.createElement("span"); label.className = "chart-label"; label.textContent = entry.label;
+        var track = document.createElement("div"); track.className = "bar-track";
+        var fill = document.createElement("div"); fill.className = "bar-fill";
+        fill.style.width = max ? Math.max(entry.count ? 3 : 0, entry.count / max * 100) + "%" : "0%";
+        fill.style.backgroundColor = colors[index % colors.length];
+        track.appendChild(fill);
+        var count = document.createElement("span"); count.className = "chart-value"; count.textContent = String(entry.count);
+        row.appendChild(label); row.appendChild(track); row.appendChild(count); bars.appendChild(row);
+      });
+      panel.appendChild(bars); document.getElementById("dashboardCharts").appendChild(panel);
+    }
+    function appendDonutChart(title, entries, colors) {
+      var panel = document.createElement("section"); panel.className = "chart-panel";
+      var heading = document.createElement("h2"); heading.textContent = title; panel.appendChild(heading);
+      var layout = document.createElement("div"); layout.className = "chart-donut-layout";
+      var total = entries.reduce(function(sum, entry) { return sum + entry.count; }, 0);
+      var angle = 0; var segments = [];
+      entries.forEach(function(entry, index) {
+        if (!entry.count || !total) return;
+        var next = angle + entry.count / total * 360;
+        segments.push(colors[index % colors.length] + " " + angle + "deg " + next + "deg");
+        angle = next;
+      });
+      if (!segments.length) segments.push("#e8efea 0deg 360deg");
+      var donut = document.createElement("div"); donut.className = "chart-donut";
+      donut.style.background = "conic-gradient(" + segments.join(",") + ")";
+      donut.setAttribute("role", "img"); donut.setAttribute("aria-label", title + ": " + total + " solicitudes");
+      var center = document.createElement("div"); center.className = "chart-donut-center";
+      var totalLabel = document.createElement("strong"); totalLabel.textContent = String(total);
+      center.appendChild(totalLabel); center.appendChild(document.createTextNode("solicitudes")); donut.appendChild(center);
+      var legend = document.createElement("div"); legend.className = "chart-legend";
+      entries.forEach(function(entry, index) {
+        var item = document.createElement("div"); item.className = "chart-legend-item";
+        var dot = document.createElement("span"); dot.className = "chart-legend-dot"; dot.style.backgroundColor = colors[index % colors.length];
+        var label = document.createElement("span"); label.textContent = entry.label;
+        var value = document.createElement("span"); value.className = "chart-legend-value"; value.textContent = String(entry.count);
+        item.appendChild(dot); item.appendChild(label); item.appendChild(value); legend.appendChild(item);
+      });
+      layout.appendChild(donut); layout.appendChild(legend); panel.appendChild(layout);
+      document.getElementById("dashboardCharts").appendChild(panel);
+    }
+    function monthlyTicketCounts(tickets) {
+      var parsed = tickets.map(function(ticket) {
+        var match = String(ticket.requestedAt || "").match(/^(\d{2})\/(\d{2})\/(\d{4})/);
+        return match ? new Date(Number(match[3]), Number(match[2]) - 1, Number(match[1])) : null;
+      }).filter(Boolean);
+      var latest = parsed.reduce(function(maxDate, date) { return !maxDate || date > maxDate ? date : maxDate; }, null) || new Date();
+      var end = new Date(latest.getFullYear(), latest.getMonth(), 1);
+      var monthNames = ["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"];
+      var months = [];
+      for (var offset = 5; offset >= 0; offset--) {
+        var month = new Date(end.getFullYear(), end.getMonth() - offset, 1);
+        var key = month.getFullYear() + "-" + String(month.getMonth() + 1).padStart(2, "0");
+        var count = parsed.filter(function(date) { return date.getFullYear() === month.getFullYear() && date.getMonth() === month.getMonth(); }).length;
+        months.push({ label: monthNames[month.getMonth()] + " " + String(month.getFullYear()).slice(-2), key: key, count: count });
+      }
+      return months;
+    }
+    function appendTrendChart(title, entries) {
+      var panel = document.createElement("section"); panel.className = "chart-panel";
+      var heading = document.createElement("h2"); heading.textContent = title; panel.appendChild(heading);
+      var subtitle = document.createElement("p"); subtitle.className = "chart-panel-subtitle"; subtitle.textContent = "Volumen mensual de los últimos seis meses con registros."; panel.appendChild(subtitle);
+      var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+      svg.setAttribute("viewBox", "0 0 560 205"); svg.setAttribute("class", "chart-trend"); svg.setAttribute("role", "img");
+      svg.setAttribute("aria-label", title + ": " + entries.map(function(entry) { return entry.label + ", " + entry.count; }).join("; "));
+      var max = entries.reduce(function(value, entry) { return Math.max(value, entry.count); }, 0) || 1;
+      var left = 42, right = 544, top = 15, bottom = 150;
+      for (var gridIndex = 0; gridIndex <= 3; gridIndex++) {
+        var y = top + (bottom - top) * gridIndex / 3;
+        var line = document.createElementNS(svg.namespaceURI, "line"); line.setAttribute("x1", left); line.setAttribute("x2", right); line.setAttribute("y1", y); line.setAttribute("y2", y); line.setAttribute("class", "grid"); svg.appendChild(line);
+        var gridLabel = document.createElementNS(svg.namespaceURI, "text"); gridLabel.setAttribute("x", 4); gridLabel.setAttribute("y", y + 4); gridLabel.textContent = String(Math.round(max * (3 - gridIndex) / 3)); svg.appendChild(gridLabel);
+      }
+      var points = entries.map(function(entry, index) {
+        var x = left + (right - left) * index / Math.max(entries.length - 1, 1);
+        var y = bottom - entry.count / max * (bottom - top);
+        return { x: x, y: y, label: entry.label, count: entry.count };
+      });
+      var linePath = points.map(function(point, index) { return (index ? "L" : "M") + point.x + " " + point.y; }).join(" ");
+      var area = document.createElementNS(svg.namespaceURI, "path"); area.setAttribute("d", linePath + " L" + right + " " + bottom + " L" + left + " " + bottom + " Z"); area.setAttribute("class", "trend-area"); svg.appendChild(area);
+      var trend = document.createElementNS(svg.namespaceURI, "path"); trend.setAttribute("d", linePath); trend.setAttribute("class", "trend-line"); svg.appendChild(trend);
+      points.forEach(function(point) {
+        var dot = document.createElementNS(svg.namespaceURI, "circle"); dot.setAttribute("cx", point.x); dot.setAttribute("cy", point.y); dot.setAttribute("r", 4); dot.setAttribute("class", "trend-dot"); svg.appendChild(dot);
+        var label = document.createElementNS(svg.namespaceURI, "text"); label.setAttribute("x", point.x); label.setAttribute("y", 178); label.setAttribute("text-anchor", "middle"); label.textContent = point.label; svg.appendChild(label);
+      });
+      panel.appendChild(svg); document.getElementById("dashboardCharts").appendChild(panel);
+    }
+    function renderResponsible() {
+      setHeading("Vista Responsable", "Control de atención", appData.canResponsible
+        ? "Revisa cada ticket, avanza su estado y agrega observaciones al registro."
+        : "Consulta todos los tickets y su avance.");
+      if (!appData.managerTickets.length) { setViewBody(emptyMarkup("No hay tickets", "Las nuevas solicitudes aparecerán en esta vista.")); return; }
+      var managerNote = appData.canResponsible
+        ? "El inicio se guarda al comenzar la atención; el fin, al pasar a validación o rechazar un ticket que ya había empezado. Las observaciones quedan en el historial."
+        : "Vista de consulta. Solo la persona responsable puede cambiar estados o agregar observaciones.";
+      setViewBody('<p class="manager-toolbar-note">' + escapeHtml(managerNote) + '</p><div class="list-toolbar"><div class="list-count" id="managerCount"></div><input class="search-control" id="managerSearch" type="search" placeholder="Buscar tickets" aria-label="Buscar tickets"></div><div class="table-shell" id="managerShell"></div>');
+      document.getElementById("managerSearch").addEventListener("input", drawManagerTable); drawManagerTable();
+    }
+    function drawManagerTable() {
+      var search = (document.getElementById("managerSearch").value || "").toLowerCase().trim();
+      var records = appData.managerTickets.filter(function(ticket) {
+        return !search || [ticket.id,ticket.requestedAt,ticket.client,ticket.country,ticket.requestType,ticket.details,ticket.applicant,ticket.team,ticket.priority,ticket.status,ticket.responsible,ticket.highPriorityApprover,ticket.comments,ticket.requesterEmail].join(" ").toLowerCase().indexOf(search) >= 0;
+      });
+      document.getElementById("managerCount").textContent = records.length + (records.length === 1 ? " ticket" : " tickets");
+      var table = document.createElement("table"); table.className = "data-table manager-table";
+      appendTableHeader(table, ["ID_Ticket","Fecha_Solicitud","Cliente","País","Tipo de Solicitud","Detalles","Solicitante","Equipo/Área","Prioridad","Estado","Responsable","Fecha Inicio Atención","Fecha Fin Atención","Tiempo Atención (min)","Prioridad Alta Aceptada por","Comentarios","Archivos adjuntos","Token aprobación","Correo solicitante"]);
+      var body = document.createElement("tbody");
+      records.forEach(function(ticket) {
+        var row = document.createElement("tr");
+        addTextCell(row,ticket.id,"cell-id"); addTextCell(row,ticket.requestedAt); addTextCell(row,ticket.client,"cell-client");
+        addTextCell(row,ticket.country); addTextCell(row,ticket.requestType); addTextCell(row,ticket.details,"cell-details");
+        addTextCell(row,ticket.applicant); addTextCell(row,ticket.team); addPriorityCell(row,ticket.priority);
+        addStatusCell(row,ticket); addTextCell(row,ticket.responsible); addTextCell(row,ticket.startedAt);
+        addTextCell(row,ticket.finishedAt); addTextCell(row,ticket.duration); addTextCell(row,ticket.highPriorityApprover);
+        addCommentCell(row,ticket); addAttachmentCell(row,ticket.attachments); addTextCell(row,ticket.token); addTextCell(row,ticket.requesterEmail);
+        body.appendChild(row);
+      });
+      table.appendChild(body); var shell = document.getElementById("managerShell"); shell.textContent = ""; shell.appendChild(table);
+    }
+    function addStatusCell(row,ticket) {
+      var cell = document.createElement("td"); cell.className = "status-cell";
+      var select = document.createElement("select"); select.className = "status-select"; select.setAttribute("aria-label","Estado del ticket " + ticket.id);
+      var option = document.createElement("option"); option.value = ticket.status; option.textContent = ticket.status; select.appendChild(option);
+      var next = nextStatuses(ticket.status);
+      next.forEach(function(status) {
+        var nextOption = document.createElement("option"); nextOption.value = status; nextOption.textContent = status; select.appendChild(nextOption);
+      });
+      select.disabled = !next.length || !appData.canResponsible;
+      select.addEventListener("change",function() {
+        var desired = select.value;
+        if (desired === "Completado" && !window.confirm("¿Confirmas que todos los equipos validaron y que el ticket está listo?")) {
+          select.value = ticket.status; return;
+        }
+        if (desired === "Rechazado" && !window.confirm("¿Confirmas que el ticket " + ticket.id + " debe quedar Rechazado? Esta acción no se puede revertir desde la ticketera.")) {
+          select.value = ticket.status; return;
+        }
+        select.disabled = true;
+        google.script.run.withSuccessHandler(function(result) {
+          refreshData(function() { showNotice("Estado de " + result.ticketId + " actualizado a " + result.status + ".", "success"); });
+        }).withFailureHandler(function(error) {
+          if (handleSessionExpired(error)) return;
+          select.disabled = false; select.value = ticket.status; showNotice(errorMessage(error),"error");
+        }).updateTicketStatus(ticket.id,desired,authToken);
+      });
+      cell.appendChild(select);
+      if (ticket.status === "Esperando Aprobación") { var note = document.createElement("span"); note.className = "status-next"; note.textContent = "Requiere aprobación"; cell.appendChild(note); }
+      row.appendChild(cell);
+    }
+    function nextStatuses(status) {
+      return {"Pendiente":["En Proceso","Rechazado"],"En Proceso":["Esperando Validación","Rechazado"],"Esperando Validación":["Completado","Rechazado"]}[status] || [];
+    }
+    function addCommentCell(row,ticket) {
+      var cell = document.createElement("td"); cell.className = "cell-comments";
+      var history = document.createElement("div"); history.textContent = ticket.comments || "Sin observaciones"; cell.appendChild(history);
+      if (!appData.canResponsible) { row.appendChild(cell); return; }
+      var editor = document.createElement("div"); editor.className = "comment-editor";
+      var textarea = document.createElement("textarea"); textarea.maxLength = 2000; textarea.placeholder = "Agregar observación"; textarea.setAttribute("aria-label","Nueva observación para " + ticket.id);
+      var button = document.createElement("button"); button.type = "button"; button.className = "button small secondary"; button.textContent = "Guardar observación";
+      button.addEventListener("click",function() {
+        if (!textarea.value.trim()) { showNotice("Escribe una observación antes de guardarla.","error"); textarea.focus(); return; }
+        button.disabled = true;
+        google.script.run.withSuccessHandler(function() {
+          refreshData(function() { showNotice("Observación agregada a " + ticket.id + ".","success"); });
+        }).withFailureHandler(function(error) {
+          if (handleSessionExpired(error)) return;
+          button.disabled = false; showNotice(errorMessage(error),"error");
+        })
+          .addResponsibleComment(ticket.id,textarea.value,authToken);
+      });
+      editor.appendChild(textarea); editor.appendChild(button); cell.appendChild(editor); row.appendChild(cell);
+    }
+    function renderApprovals() {
+      setHeading("Prioridad alta", "Aprobaciones pendientes", appData.canApprove
+        ? "Revisa el contexto y aprueba o ajusta la prioridad de cada solicitud."
+        : "Consulta las solicitudes que esperan aprobación.");
+      var records = appData.pendingApprovals || [];
+      if (!records.length) { setViewBody(emptyMarkup("No hay aprobaciones pendientes", "Las solicitudes de prioridad alta aparecerán aquí cuando se registren.")); return; }
+      var approvalNote = appData.canApprove ? "" : '<p class="manager-toolbar-note">Vista de consulta. Solo las personas aprobadoras pueden aprobar o rechazar estas solicitudes.</p>';
+      setViewBody(approvalNote + '<div class="list-toolbar"><div class="list-count" id="approvalCount"></div></div><div class="table-shell" id="approvalShell"></div>');
+      var table = document.createElement("table"); table.className = "data-table approval-table";
+      appendTableHeader(table,["Ticket","Fecha","Cliente","País","Solicitud","Detalles","Solicitante","Correo","Observaciones","Adjuntos","Decisión"]);
+      var body = document.createElement("tbody");
+      var automaticDecision = null;
+      records.forEach(function(ticket) {
+        var row = document.createElement("tr");
+        if (approvalTokenFromUrl && ticket.token === approvalTokenFromUrl) row.className = "approval-row target";
+        addTextCell(row,ticket.id,"cell-id"); addTextCell(row,ticket.requestedAt); addTextCell(row,ticket.client,"cell-client");
+        addTextCell(row,ticket.country); addTextCell(row,ticket.requestType); addTextCell(row,ticket.details,"cell-details");
+        addTextCell(row,ticket.applicant); addTextCell(row,ticket.requesterEmail); addTextCell(row,ticket.comments,"cell-comments");
+        addAttachmentCell(row,ticket.attachments);
+        var actions = document.createElement("td"); actions.className = "approve-actions";
+        var actionRow = document.createElement("div"); actionRow.className = "approval-actions";
+        var approve = document.createElement("button"); approve.type = "button"; approve.className = "button small"; approve.textContent = "Aprobar";
+        var reject = document.createElement("button"); reject.type = "button"; reject.className = "button small danger"; reject.textContent = "No aprobar";
+        approve.disabled = reject.disabled = !appData.canApprove;
+        approve.addEventListener("click",function() { decide(ticket,"approve",approve,reject); });
+        reject.addEventListener("click",function() { decide(ticket,"reject",approve,reject); });
+        if (appData.canApprove && ticket.token === approvalTokenFromUrl && (approvalDecisionFromUrl === "approve" || approvalDecisionFromUrl === "reject")) {
+          automaticDecision = { ticket: ticket, approve: approve, reject: reject, decision: approvalDecisionFromUrl };
+        }
+        actionRow.appendChild(approve); actionRow.appendChild(reject); actions.appendChild(actionRow); row.appendChild(actions); body.appendChild(row);
+      });
+      table.appendChild(body); document.getElementById("approvalShell").appendChild(table);
+      document.getElementById("approvalCount").textContent = records.length + (records.length === 1 ? " solicitud pendiente" : " solicitudes pendientes");
+      if (approvalTokenFromUrl) {
+        var target = document.querySelector(".approval-row.target");
+        if (target) target.scrollIntoView({block:"center",behavior:window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth"});
+      }
+      if (automaticDecision) {
+        window.setTimeout(function() { decide(automaticDecision.ticket, automaticDecision.decision, automaticDecision.approve, automaticDecision.reject); }, 0);
+      }
+    }
+    function decide(ticket,decision,approveButton,rejectButton) {
+      var action = decision === "approve" ? "aprobar la prioridad alta de " + ticket.id : "no aprobarla y ajustar la prioridad a Media";
+      if (!window.confirm("¿Confirmas " + action + "?")) return;
+      approveButton.disabled = true; rejectButton.disabled = true;
+      google.script.run.withSuccessHandler(function(result) {
+        refreshData(function() { showNotice(result.message,"success"); });
+      }).withFailureHandler(function(error) {
+        if (handleSessionExpired(error)) return;
+        approveButton.disabled = false; rejectButton.disabled = false; showNotice(errorMessage(error),"error");
+      }).decideHighPriority(ticket.token,decision,authToken);
+    }
+    function refreshData(after) {
+      google.script.run.withSuccessHandler(function(data) {
+        appData = data; buildNavigation(); navigate(currentView); if (after) after();
+      }).withFailureHandler(function(error) {
+        if (!handleSessionExpired(error)) showNotice(errorMessage(error),"error");
+      }).getAppData(authToken);
+    }
+    function appendTableHeader(table,labels) {
+      var head = document.createElement("thead"); var row = document.createElement("tr");
+      labels.forEach(function(label) { var cell = document.createElement("th"); cell.scope = "col"; cell.textContent = label; row.appendChild(cell); });
+      head.appendChild(row); table.appendChild(head);
+    }
+    function addTextCell(row,value,className) {
+      var cell = document.createElement("td"); if (className) cell.className = className;
+      cell.textContent = value == null || value === "" ? "—" : String(value); row.appendChild(cell);
+    }
+    function addPriorityCell(row,priority) {
+      var cell = document.createElement("td"); var pill = document.createElement("span");
+      pill.className = "pill " + (priority === "Alta" ? "high" : priority === "Media" ? "medium" : "low");
+      pill.textContent = priority || "—"; cell.appendChild(pill); row.appendChild(cell);
+    }
+    function addStatusBadgeCell(row,status) {
+      var cell = document.createElement("td");
+      var badge = document.createElement("span"); badge.className = "status-badge" + (status === "Rechazado" ? " rejected" : "");
+      badge.textContent = status || "—";
+      cell.appendChild(badge); row.appendChild(cell);
+    }
+    function addAttachmentCell(row,attachments) {
+      var cell = document.createElement("td"); cell.className = "cell-files";
+      var list = Array.isArray(attachments) ? attachments : [];
+      if (!list.length) cell.textContent = "—";
+      else list.forEach(function(file) {
+        if (!file.fileId) {
+          var text = document.createElement("span"); text.textContent = file.name; cell.appendChild(text); return;
+        }
+        var link = document.createElement("button"); link.type = "button"; link.className = "file-link";
+        link.textContent = file.name; link.addEventListener("click",function() { downloadAttachment(file.fileId,link); });
+        cell.appendChild(link);
+      });
+      row.appendChild(cell);
+    }
+    function downloadAttachment(fileId,button) {
+      button.disabled = true;
+      google.script.run.withSuccessHandler(function(file) {
+        button.disabled = false;
+        var binary = atob(file.data);
+        var bytes = new Uint8Array(binary.length);
+        for (var i=0;i<binary.length;i++) bytes[i] = binary.charCodeAt(i);
+        var blob = new Blob([bytes],{type:file.mimeType || "application/octet-stream"});
+        var url = URL.createObjectURL(blob);
+        var anchor = document.createElement("a"); anchor.href = url; anchor.download = file.name;
+        document.body.appendChild(anchor); anchor.click(); anchor.remove(); URL.revokeObjectURL(url);
+      }).withFailureHandler(function(error) {
+        if (handleSessionExpired(error)) return;
+        button.disabled = false; showNotice(errorMessage(error),"error");
+      }).downloadAttachment(fileId,authToken);
+    }
+    function optionList(values,placeholder) {
+      var html = '<option value="" disabled selected>' + escapeHtml(placeholder) + '</option>';
+      values.forEach(function(value) { html += '<option value="' + escapeHtml(value) + '">' + escapeHtml(value) + '</option>'; });
+      return html;
+    }
+    function setHeading(section,title,description) {
+      document.getElementById("sectionName").textContent = section;
+      setContent('<header class="page-heading"><h1>' + escapeHtml(title) + '</h1><p>' + escapeHtml(description) + '</p><div class="heading-rule"></div></header><div id="viewBody"></div>');
+    }
+    function setViewBody(html) {
+      var body = document.getElementById("viewBody");
+      if (body) body.innerHTML = html;
+      else setContent(html);
+    }
+    function setContent(html) { document.getElementById("content").innerHTML = html; }
+    function emptyMarkup(title,description) { return '<div class="empty-state"><strong>' + escapeHtml(title) + '</strong>' + escapeHtml(description) + '</div>'; }
+    function showFatal(message) {
+      document.getElementById("content").textContent = "";
+      var panel = document.createElement("div"); panel.className = "empty-state";
+      var strong = document.createElement("strong"); strong.textContent = "No se pudo abrir la ticketera";
+      panel.appendChild(strong); panel.appendChild(document.createTextNode(message)); document.getElementById("content").appendChild(panel);
+    }
+    function showNotice(message,type) {
+      var notice = document.getElementById("notice"); notice.textContent = message || "";
+      notice.className = "notice visible" + (type === "error" ? " error" : type === "warning" ? " warning" : "");
+    }
+    function clearNotice() { var notice=document.getElementById("notice");notice.className="notice";notice.textContent=""; }
+    function errorMessage(error) { return error && error.message ? error.message.replace(/^Exception:\s*/,"") : String(error || "Ocurrió un error."); }
+    function handleSessionExpired(error) {
+      var message = errorMessage(error);
+      if (message.toLowerCase().indexOf("sesión venció") < 0) return false;
+      authToken = ""; localStorage.removeItem("ticketeraAuth"); window.location.reload(); return true;
+    }
+    function logout() {
+      authToken = "";
+      appData = null;
+      approvalTokenFromUrl = "";
+      localStorage.removeItem("ticketeraAuth");
+      try { window.history.replaceState(null, document.title, window.location.pathname); } catch (error) {}
+      renderLogin();
+      showNotice("Sesión cerrada.", "success");
+    }
+    function escapeHtml(value) {
+      return String(value).replace(/[&<>"']/g,function(character) {
+        return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[character];
+      });
+    }
+    function formatBytes(bytes) {
+      if (bytes < 1024) return bytes + " B";
+      if (bytes < 1024*1024) return (bytes/1024).toFixed(0) + " KB";
+      return (bytes/(1024*1024)).toFixed(1) + " MB";
+    }
+    document.getElementById("logoutButton").addEventListener("click", logout);
+    startApp();
+  </script>
+</body>
+</html>
